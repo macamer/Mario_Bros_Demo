@@ -5,7 +5,7 @@ const config = {
   type: Phaser.AUTO, //tipo de renderizado webgl, canvas or auto
   width: 256,
   height: 244,
-  backgroundColor: "#049cd8",
+  backgroundColor: "#9ACAF9",
   parent: "game", //donde se va renderizar
   physics: {
     default: "arcade",
@@ -27,6 +27,10 @@ new Phaser.Game(config)
 
 function preload() {
   this.load.image("cloud1", "assets/scenery/overworld/cloud1.png");
+  this.load.image('cloud2', 'assets/scenery/overworld/cloud2.png')
+  this.load.image('mountain2', 'assets/scenery/overworld/mountain2.png')
+  this.load.image('bush1', 'assets/scenery/overworld/bush1.png')
+  this.load.image('logo', 'assets/scenery/sign.png')
   this.load.image("floorbricks", "assets/scenery/overworld/floorbricks.png");
   this.load.spritesheet(
     "mario",
@@ -41,9 +45,20 @@ function preload() {
 
 function create() {
   //x,y,id
-  this.add.image(100, 50, "cloud1")
+  this.add.image(150, 50, "cloud1")
     .setScale(0.15)
     .setOrigin(0, 0)
+  this.add.image(70, 100, "cloud2")
+    .setScale(0.15)
+    .setOrigin(0, 0)
+  this.add.image(0, 240, "mountain2")
+    .setOrigin(0, 1)
+  this.add.image(250, 212, "bush1")
+    .setScale(0.5)
+    .setOrigin(0, 1)
+  this.add.image(25, 25, 'logo')
+    .setScale(0.4)
+    .setOrigin(0,0)
 
   //añadir un grupo estático para el suelo
   this.floor = this.physics.add.staticGroup();
@@ -52,7 +67,11 @@ function create() {
     .setOrigin(0, 0.5)
     .refreshBody() //sincronizar la posicion y tamaño con el body
   this.floor
-    .create(200, config.height-16, "floorbricks")
+    .create(128, config.height-16, "floorbricks")
+    .setOrigin(0, 0.5)
+    .refreshBody()
+  this.floor
+    .create(250, config.height-16, "floorbricks")
     .setOrigin(0, 0.5)
     .refreshBody()
 
