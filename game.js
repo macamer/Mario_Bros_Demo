@@ -14,28 +14,28 @@ const config = {
 };
 
 //inicializar
-new Phaser.Game(config)
+new Phaser.Game(config);
 
 function preload() {
-    this.load.image(
-        'cloud1',
-        'assets/scenery/overworld/cloud1.png'
-    )
-    
-    this.load.spritesheet(
-        'mario',
-        'assets/entities/mario.png',
-        {frameWidth: 14} //lo que ocupa el año del primer mario
-    )
+  this.load.image("cloud1", "assets/scenery/overworld/cloud1.png");
+
+  this.load.image("floorbricks", "assets/scenery/overworld/floorbricks.png");
+  this.load.spritesheet(
+    "mario",
+    "assets/entities/mario.png",
+    { frameWidth: 18, frameHeight: 16 } //lo que ocupa el año del primer mario
+  );
 }
 
 function create() {
-    this.add.image(100,50,'cloud1')
-    .setScale(0.15)
-    .setOrigin(0,0)
+    //x,y,id
+  this.add.image(100, 50, "cloud1").setScale(0.15).setOrigin(0, 0);
+    this.add.tileSprite(0, config.height, config.width, 32, 'floorbricks')
+    .setOrigin(0,1) //es una textura, se puede expandir
+  this.add.sprite(50, 210, "mario").setOrigin(0, 1);
 
-    this.add.sprite(50,200, 'mario')
-    .setOrigin(0,1)
+  //crear las teclas para poder visualizarlas en update
+  this.keys = this.input.keyboard.createCursorKeys()
 
 }
 
