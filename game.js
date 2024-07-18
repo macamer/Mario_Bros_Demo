@@ -33,6 +33,10 @@ function preload() {
     "assets/entities/mario.png",
     { frameWidth: 18, frameHeight: 16 } //lo que ocupa el año del primer mario
   )
+
+  this.load.audio('gameover', 'assets/sound/music/gameover.mp3')
+  this.load.audio('jump', 'assets/sound/effects/jump.mp3')
+  this.load.audio('basic-music', 'assets/sound/music/overworld/theme.mp3')
 }
 
 function create() {
@@ -77,9 +81,13 @@ function create() {
   this.cameras.main.startFollow(this.mario)
 
   createAnimations (this)
+
+  //this.sound.play('basic-music');
 }
 
 function update() {
+  if (this.mario.isDead) return 
+  
   if (this.keys.left.isDown) {
     this.mario.x -= 2;
     this.mario.anims.play("mario-walk", true);
@@ -98,8 +106,21 @@ function update() {
   if (this.keys.up.isDown && this.mario.body.touching.down) {
     //this.mario.y -= 5;
     this.mario.setVelocityY(-100)
-    this.mario.anims.play("mario-jump", true);
+    this.mario.anims.play("mario-jump", true)
+    this.sound.add('jump', {volume : 0.2}).play()
   } else if (!this.mario.body.touching.down){
     this.mario.anims.play("mario-jump", true);
+  }
+
+  if (this.mario.y >= config.height){
+    this.mario.isDead = true
+    this.mario.anims.play('mario-dead', true)
+    this.mario.setVelocityY(-100)
+    this.mario.setCollideWorldBounds(false)
+    this.sound.play('gameover')
+
+    setTimeout(() => {
+        this.scene.restart()
+    }, 2000)
   }
 }
