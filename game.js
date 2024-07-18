@@ -49,18 +49,31 @@ function create() {
     key: 'mario-idle',
     frames: [{key: 'mario', frame: 0}]
   })
+
+  this.anims.create({
+    key: 'mario-jump',
+    frames: [{key: 'mario', frame: 5}]
+  })
 }
 
 function update() {
   if (this.keys.left.isDown) {
     this.mario.x -= 2;
     this.mario.anims.play("mario-walk", true);
+    this.mario.flipX = true
   } else if (this.keys.right.isDown) {
     this.mario.x += 2;
     this.mario.anims.play("mario-walk", true);
-    
+    this.mario.flipX = false
   } else {
+    /*
     this.mario.anims.stop()
-    this.mario.setFrame(0) //volver al frame 0 del mario
+    this.mario.setFrame(0) */
+    this.mario.anims.play('mario-idle', true)
+  }
+
+  if (this.keys.up.isDown) {
+    this.mario.y -= 5
+    this.mario.anims.play('mario-jump', true)
   }
 }
