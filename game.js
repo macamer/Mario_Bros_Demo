@@ -1,6 +1,7 @@
 import {createAnimations} from "./animations.js"
 import { createBackground} from "./backgound.js";
 import { createFloor } from "./floor.js";
+import { createEnemies } from "./enemies.js";
 
 /*Global Phaser */
 const config = {
@@ -27,8 +28,8 @@ const config = {
 //añadir variables
 let player;
 let money;
-let platforms;
-let cursors;
+let floor;
+let enemies;
 let score = 0;
 let scoreText;
 let lives;
@@ -49,13 +50,19 @@ function preload() {
   this.load.spritesheet(
     "mario",
     "assets/entities/mario.png",
-    { frameWidth: 18, frameHeight: 16 } //lo que ocupa el año del primer mario
+    { frameWidth: 18, frameHeight: 16 } //lo que ocupa el primer mario
   )
   this.load.spritesheet(
     "coin",
     "assets/collectibles/coin.png",
     { frameWidth: 16, frameHeight: 16 } 
   )
+  this.load.spritesheet(
+    "goomba",
+    "assets/entities/overworld/goomba.png",
+    { frameWidth: 16, frameHeight: 16 } 
+  )
+
 
   this.load.audio('gameover', 'assets/sound/music/gameover.mp3')
   this.load.audio('jump', 'assets/sound/effects/jump.mp3')
@@ -64,7 +71,6 @@ function preload() {
 }
 
 function create() {
-  //x,y,id
   createBackground(this)
   
   //poner puntuación
@@ -75,10 +81,9 @@ function create() {
   this.add.sprite(75, 10, "coin").setOrigin(0, 0).setScrollFactor(0).setScale(0.7)
   
   //añadir un grupo estático para el suelo
-  this.floor = this.physics.add.staticGroup();
-  createFloor(this.floor, heightFloor)
+  floor = this.physics.add.staticGroup();
+  createFloor(floor, heightFloor)
   
-
   /* this.add
     .tileSprite(0, config.height, config.width-130, 32, "floorbricks")
     .setOrigin(0, 1);*/ //es una textura, se puede expandir
@@ -86,22 +91,23 @@ function create() {
   //guardar el mario para que pueda mover -->
   //this.mario = this.add.sprite(50, 210, "mario").setOrigin(0, 1);
 
-  this.mario = this.physics.add.sprite(20, 100, "mario")
+  player = this.physics.add.sprite(20, 100, "mario")
     .setOrigin(0, 1)
     .setCollideWorldBounds(true) //tiene que colisionar con el mundo
+  player.isDead = false
 
   //limites del mundo
   this.physics.world.setBounds(0, 0, 2000, config.height) //indexX, indexY, limiteX, limiteY
 
   //añadir colision con el suelo
-  this.physics.add.collider(this.mario, this.floor);
+  this.physics.add.collider(player, floor);
 
   //crear las teclas para poder visualizarlas en update
   this.keys = this.input.keyboard.createCursorKeys();
 
   //camara
   this.cameras.main.setBounds(0,0,2000, config.height)
-  this.cameras.main.startFollow(this.mario)
+  this.cameras.main.startFollow(player)
 
   createAnimations (this)
 
@@ -112,54 +118,107 @@ function create() {
   let coin = money.create(300, 180, 'coin-rotates').refreshBody().setOrigin(0,0)
   coin.anims.play('coin-rotates')
 
-  this.physics.add.overlap(this.mario, money, collectMoney, null, this)
+  this.physics.add.overlap(player, money, collectMoney, null, this)
+
+  //enemigos
+  enemies = this.physics.add.group()
+  createEnemies(this, enemies)
+
+  // Colisiones con enemigos
+  this.physics.add.collider(player, enemies)
+  this.physics.add.collider(player, enemies, dead, null, this)
+  this.physics.add.overlap(player, enemies, hitEnemy, null, this);
+  this.physics.add.collider(enemies, floor);
+
   //this.sound.play('basic-music');
 }
 
 function update() {
-  if (this.mario.isDead) return 
+  if (player.isDead) return 
   
   if (this.keys.left.isDown) {
-    this.mario.x -= 2;
-    this.mario.anims.play("mario-walk", true);
-    this.mario.flipX = true;
+    player.x -= 2;
+    player.anims.play("mario-walk", true);
+    player.flipX = true;
   } else if (this.keys.right.isDown) {
-    this.mario.x += 2;
-    this.mario.anims.play("mario-walk", true);
-    this.mario.flipX = false;
+    player.x += 2;
+    player.anims.play("mario-walk", true);
+    player.flipX = false;
   } else {
     /*
     this.mario.anims.stop()
     this.mario.setFrame(0) */
-    this.mario.anims.play("mario-idle", true);
+    player.anims.play("mario-idle", true);
   }
 
-  if (this.keys.up.isDown && this.mario.body.touching.down) {
+  if (this.keys.up.isDown && player.body.touching.down) {
     //this.mario.y -= 5;
-    this.mario.setVelocityY(-100)
-    this.mario.anims.play("mario-jump", true)
+    player.setVelocityY(-100)
+    player.anims.play("mario-jump", true)
     this.sound.add('jump', {volume : 0.2}).play()
-  } else if (!this.mario.body.touching.down){
-    this.mario.anims.play("mario-jump", true);
+  } else if (!player.body.touching.down) {
+    player.anims.play("mario-jump", true);
   }
 
-  if (this.mario.y >= config.height){
-    this.mario.isDead = true
-    this.mario.anims.play('mario-dead', true)
-    this.mario.setVelocityY(-100)
-    this.mario.setCollideWorldBounds(false)
-    this.sound.play('gameover')
-
-    setTimeout(() => {
-        this.scene.restart()
-    }, 2000)
+  if (player.y >= config.height){
+    console.log("ha muerto")
+    dead.call(this, player)
   }
+
+  enemies.getChildren().forEach(enemy => {
+    const playerBounds = player.getBounds();
+    const enemyBounds = enemy.getBounds();
+  if (player.body.touching.down && player.body.velocity.y > 0) {
+    
+    
+    // Verifica si el jugador está tocando el enemigo por arriba
+    if (playerBounds.bottom >= enemyBounds.top &&
+        Phaser.Geom.Intersects.RectangleToRectangle(playerBounds, enemyBounds)) {
+        enemy.anims.play("goomba-dead", true);
+        this.tweens.killTweensOf(enemy);
+        player.setVelocityY(-100)
+        console.log('ha dado')
+        setTimeout(() => {
+          enemy.disableBody(true, true)
+        }, 800)
+    }
+  }
+})
 }
 
 function collectMoney (player, money) {
-        money.disableBody(true, true);
-        this.sound.add('coin-collect', {volume : 0.2}).play()
+    money.disableBody(true, true);
+    this.sound.add('coin-collect', {volume : 0.2}).play()
 
-        score += 1;
-        scoreText.setText('x0' + score);
-    }
+    score += 1;
+    scoreText.setText('x0' + score);
+}
+
+function hitEnemy(player, enemy){
+  console.log("hit enemy")
+  if(!player.isDead){
+    dead.call(this, player)
+  }
+  if (player.getBounds().bottom >= enemy.getBounds().top) {
+    // El jugador ha tocado el enemigo por arriba
+    console.log('Jugador ha tocado el enemigo por arriba');
+    
+    // Aquí puedes implementar la lógica para el daño al enemigo o la muerte del enemigo
+  }
+}
+
+function dead(player){
+  console.log('dead')
+  player.isDead = true
+  player.anims.play('mario-dead', true)
+  player.setVelocityY(-100)
+  player.setCollideWorldBounds(false)
+  player.body.checkCollision.none = true;
+  let deadSound = this.sound.add('gameover')
+  deadSound.play()
+
+  setTimeout(() => {
+    deadSound.stop()
+      this.scene.restart()
+  }, 3000)
+}

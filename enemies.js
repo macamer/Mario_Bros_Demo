@@ -1,10 +1,14 @@
 export const createEnemies = (game, enemies) => {
-    // Crear un enemigo y añadirlo al grupo
-  let enemy = enemies.create(212, 210 , 'goomba').setOrigin(0, 1);
-
   // Reproducir la animación del enemigo
-  enemy.anims.play('goomba-walk');
+  const enemyPositions = [
+    { x: 240, y: 210 },
+    { x: 350, y: 210 }
+  ];
 
+  enemyPositions.forEach(pos => {
+    let enemy = enemies.create(pos.x, pos.y, 'goomba').setOrigin(0, 1);
+
+  enemy.anims.play('goomba-walk');
   // Aplicar un movimiento en el eje Y
   game.tweens.add({
     targets: enemy,
@@ -13,7 +17,7 @@ export const createEnemies = (game, enemies) => {
     yoyo: true,  // Hacer que el movimiento sea de ida y vuelta
     repeat: -1,  // Repetir indefinidamente
     ease: 'Sine.easeInOut'
-  });
-
+  })
+})
 
 }
