@@ -1,4 +1,5 @@
 import {createAnimations} from "./animations.js"
+import { createBackground} from "./backgound.js";
 
 /*Global Phaser */
 const config = {
@@ -22,6 +23,15 @@ const config = {
   },
 };
 
+//añadir variables
+let player;
+let money;
+let platforms;
+let cursors;
+let score = 0;
+let scoreText;
+let lives;
+
 //inicializar
 new Phaser.Game(config)
 
@@ -37,29 +47,29 @@ function preload() {
     "assets/entities/mario.png",
     { frameWidth: 18, frameHeight: 16 } //lo que ocupa el año del primer mario
   )
+  this.load.spritesheet(
+    "coin",
+    "assets/collectibles/coin.png",
+    { frameWidth: 16, frameHeight: 16 } 
+  )
 
   this.load.audio('gameover', 'assets/sound/music/gameover.mp3')
   this.load.audio('jump', 'assets/sound/effects/jump.mp3')
   this.load.audio('basic-music', 'assets/sound/music/overworld/theme.mp3')
+  this.load.audio('coin-collect', 'assets/sound/effects/coin.mp3')
 }
 
 function create() {
   //x,y,id
-  this.add.image(150, 50, "cloud1")
-    .setScale(0.15)
-    .setOrigin(0, 0)
-  this.add.image(70, 100, "cloud2")
-    .setScale(0.15)
-    .setOrigin(0, 0)
-  this.add.image(0, 240, "mountain2")
-    .setOrigin(0, 1)
-  this.add.image(250, 212, "bush1")
-    .setScale(0.5)
-    .setOrigin(0, 1)
-  this.add.image(25, 25, 'logo')
-    .setScale(0.4)
+  createBackground(this)
+  
+  //poner puntuación
+  scoreText = this.add.text(90, 10, 'x00', { fontSize: '10px', fill: '#ffff' })
     .setOrigin(0,0)
-
+    .setScrollFactor(0) //Fijar el texto en la camara
+  
+  this.add.sprite(75, 10, "coin").setOrigin(0, 0).setScrollFactor(0).setScale(0.7)
+  
   //añadir un grupo estático para el suelo
   this.floor = this.physics.add.staticGroup();
   this.floor
@@ -82,12 +92,12 @@ function create() {
   //guardar el mario para que pueda mover -->
   //this.mario = this.add.sprite(50, 210, "mario").setOrigin(0, 1);
 
-  this.mario = this.physics.add.sprite(50, 100, "mario")
+  this.mario = this.physics.add.sprite(20, 100, "mario")
     .setOrigin(0, 1)
     .setCollideWorldBounds(true) //tiene que colisionar con el mundo
 
-    //limites del mundo
-    this.physics.world.setBounds(0, 0, 2000, config.height) //indexX, indexY, limiteX, limiteY
+  //limites del mundo
+  this.physics.world.setBounds(0, 0, 2000, config.height) //indexX, indexY, limiteX, limiteY
 
   //añadir colision con el suelo
   this.physics.add.collider(this.mario, this.floor);
@@ -101,6 +111,14 @@ function create() {
 
   createAnimations (this)
 
+  //colindar con monedas
+  money = this.physics.add.group({
+    allowGravity: false //desactivar la gravedad
+  })
+  let coin = money.create(300, 180, 'coin-rotates').refreshBody().setOrigin(0,0)
+  coin.anims.play('coin-rotates')
+
+  this.physics.add.overlap(this.mario, money, collectMoney, null, this)
   //this.sound.play('basic-music');
 }
 
@@ -143,3 +161,11 @@ function update() {
     }, 2000)
   }
 }
+
+function collectMoney (player, money) {
+        money.disableBody(true, true);
+        this.sound.add('coin-collect', {volume : 0.2}).play()
+
+        score += 1;
+        scoreText.setText('x0' + score);
+    }

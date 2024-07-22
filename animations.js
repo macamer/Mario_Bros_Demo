@@ -20,4 +20,11 @@ export const createAnimations = (game) => {
     key: 'mario-dead',
     frames: [{ key: 'mario', frame: 4}]
   })
+
+  game.anims.create({
+    key: 'coin-rotates',
+    frames: game.anims.generateFrameNumbers("coin", { start: 0, end: 3 }),
+    frameRate: 10,
+    repeat: -1,
+  })
 }
