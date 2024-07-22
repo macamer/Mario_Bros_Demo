@@ -1,5 +1,6 @@
 import {createAnimations} from "./animations.js"
 import { createBackground} from "./backgound.js";
+import { createFloor } from "./floor.js";
 
 /*Global Phaser */
 const config = {
@@ -18,7 +19,7 @@ const config = {
 
   scene: {
     preload, //se ejecuta para cargar los recursos
-    create, //se ejecuta ccuando el juego comienza
+    create, //se ejecuta cuando el juego comienza
     update, //se ejecuta en cada frame
   },
 };
@@ -31,6 +32,8 @@ let cursors;
 let score = 0;
 let scoreText;
 let lives;
+let heightFloor = config.height - 16;
+
 
 //inicializar
 new Phaser.Game(config)
@@ -38,6 +41,7 @@ new Phaser.Game(config)
 function preload() {
   this.load.image("cloud1", "assets/scenery/overworld/cloud1.png");
   this.load.image('cloud2', 'assets/scenery/overworld/cloud2.png')
+  this.load.image('mountain1', 'assets/scenery/overworld/mountain1.png')
   this.load.image('mountain2', 'assets/scenery/overworld/mountain2.png')
   this.load.image('bush1', 'assets/scenery/overworld/bush1.png')
   this.load.image('logo', 'assets/scenery/sign.png')
@@ -72,18 +76,8 @@ function create() {
   
   //añadir un grupo estático para el suelo
   this.floor = this.physics.add.staticGroup();
-  this.floor
-    .create(0, config.height-16, "floorbricks")
-    .setOrigin(0, 0.5)
-    .refreshBody() //sincronizar la posicion y tamaño con el body
-  this.floor
-    .create(128, config.height-16, "floorbricks")
-    .setOrigin(0, 0.5)
-    .refreshBody()
-  this.floor
-    .create(250, config.height-16, "floorbricks")
-    .setOrigin(0, 0.5)
-    .refreshBody()
+  createFloor(this.floor, heightFloor)
+  
 
   /* this.add
     .tileSprite(0, config.height, config.width-130, 32, "floorbricks")
