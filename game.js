@@ -62,12 +62,18 @@ function preload() {
     "assets/entities/overworld/goomba.png",
     { frameWidth: 16, frameHeight: 16 } 
   )
+  this.load.spritesheet(
+    "misteryBlock",
+    "assets/blocks/overworld/misteryBlock.png",
+    { frameWidth: 16, frameHeight: 16 } 
+  )
 
 
   this.load.audio('gameover', 'assets/sound/music/gameover.mp3')
   this.load.audio('jump', 'assets/sound/effects/jump.mp3')
   this.load.audio('basic-music', 'assets/sound/music/overworld/theme.mp3')
   this.load.audio('coin-collect', 'assets/sound/effects/coin.mp3')
+  this.load.audio('kick', 'assets/sound/effects/kick.mp3')
 }
 
 function create() {
@@ -177,6 +183,7 @@ function update() {
         enemy.anims.play("goomba-dead", true);
         this.tweens.killTweensOf(enemy);
         player.setVelocityY(-100)
+        this.sound.add('kick').play()
         console.log('ha dado')
         setTimeout(() => {
           enemy.disableBody(true, true)
