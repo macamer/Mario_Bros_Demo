@@ -29,6 +29,7 @@ const config = {
 let player;
 let money;
 let floor;
+let misteryBlocks
 let enemies;
 let score = 0;
 let scoreText;
@@ -47,6 +48,7 @@ function preload() {
   this.load.image('bush1', 'assets/scenery/overworld/bush1.png')
   this.load.image('logo', 'assets/scenery/sign.png')
   this.load.image("floorbricks", "assets/scenery/overworld/floorbricks.png");
+  this.load.image('emptyBlock', 'assets/blocks/overworld/emptyBlock.png')
   this.load.spritesheet(
     "mario",
     "assets/entities/mario.png",
@@ -68,7 +70,6 @@ function preload() {
     { frameWidth: 16, frameHeight: 16 } 
   )
 
-
   this.load.audio('gameover', 'assets/sound/music/gameover.mp3')
   this.load.audio('jump', 'assets/sound/effects/jump.mp3')
   this.load.audio('basic-music', 'assets/sound/music/overworld/theme.mp3')
@@ -76,8 +77,10 @@ function preload() {
   this.load.audio('kick', 'assets/sound/effects/kick.mp3')
 }
 
+/* ---------------------------- CREATE ----------------------------- */
 function create() {
   createBackground(this)
+  createAnimations (this)
   
   //poner puntuación
   scoreText = this.add.text(90, 10, 'x00', { fontSize: '10px', fill: '#ffff' })
@@ -87,9 +90,11 @@ function create() {
   this.add.sprite(75, 10, "coin").setOrigin(0, 0).setScrollFactor(0).setScale(0.7)
   
   //añadir un grupo estático para el suelo
-  floor = this.physics.add.staticGroup();
+  floor = this.physics.add.staticGroup()
   createFloor(floor, heightFloor)
-  
+
+
+
   /* this.add
     .tileSprite(0, config.height, config.width-130, 32, "floorbricks")
     .setOrigin(0, 1);*/ //es una textura, se puede expandir
@@ -115,7 +120,20 @@ function create() {
   this.cameras.main.setBounds(0,0,2000, config.height)
   this.cameras.main.startFollow(player)
 
-  createAnimations (this)
+
+  //mistery block
+  misteryBlocks = this.physics.add.staticGroup({
+    allowGravity: false //desactivar la gravedad
+  })
+  
+  this.misteryBlock = misteryBlocks.create(240, 170, 'mistery')
+    .refreshBody()
+    .setOrigin(0,0)
+  //160
+  this.misteryBlock.anims.play('mistery')
+  this.physics.add.collider(player,misteryBlocks)
+  this.physics.add.overlap(player,misteryBlocks)
+  
 
   //colindar con monedas
   money = this.physics.add.group({
@@ -139,8 +157,13 @@ function create() {
   //this.sound.play('basic-music');
 }
 
+
+/*----------------------------- UPDATE -----------------------------*/
 function update() {
-  if (player.isDead) return 
+  if (player.isDead) {
+    score = 0
+    return
+  } 
   
   if (this.keys.left.isDown) {
     player.x -= 2;
@@ -184,7 +207,6 @@ function update() {
         this.tweens.killTweensOf(enemy);
         player.setVelocityY(-100)
         this.sound.add('kick').play()
-        console.log('ha dado')
         setTimeout(() => {
           enemy.disableBody(true, true)
         }, 800)
@@ -193,12 +215,23 @@ function update() {
 })
 }
 
+/* ------------------------- FUNCTIONS -------------------- */
+
 function collectMoney (player, money) {
     money.disableBody(true, true);
     this.sound.add('coin-collect', {volume : 0.2}).play()
 
     score += 1;
     scoreText.setText('x0' + score);
+}
+
+function hitBlock (player, misteryBlock) {
+  misteryBlock.add.image(300, 212, 'emptyBlock')
+  .setOrigin(0, 1)
+  this.sound.add('coin-collect', {volume : 0.2}).play()
+
+  score += 1;
+  scoreText.setText('x0' + score);
 }
 
 function hitEnemy(player, enemy){
