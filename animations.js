@@ -39,4 +39,9 @@ export const createAnimations = (game) => {
     key: 'goomba-dead',
     frames: [{ key: 'goomba', frame: 2}]
   })
+
+  game.anims.create({
+    key: 'mistery',
+    frames: game.anims.generateFrameNumbers('misteryBlock', { start: 0, end: 2 }),
+  })
 }
