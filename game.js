@@ -26,15 +26,15 @@ const config = {
 };
 
 //añadir variables
-let player;
-let money;
-let floor;
+let player
+let money
+let floor
 let misteryBlocks
-let enemies;
-let score = 0;
-let scoreText;
-let lives;
-let heightFloor = config.height - 16;
+let enemies
+let score = 0, scoreUp
+let coinText, marioText, wordText, timeText
+let lives
+let heightFloor = config.height - 16
 
 
 //inicializar
@@ -83,7 +83,7 @@ function create() {
   createAnimations (this)
   
   //poner puntuación
-  scoreText = this.add.text(90, 10, 'x00', { fontSize: '10px', fill: '#ffff' })
+  coinText = this.add.text(90, 10, 'x00', { fontSize: '10px', fill: '#ffff' })
     .setOrigin(0,0)
     .setScrollFactor(0) //Fijar el texto en la camara
   
@@ -100,7 +100,7 @@ function create() {
   //guardar el mario para que pueda mover -->
   //this.mario = this.add.sprite(50, 210, "mario").setOrigin(0, 1);
 
-  player = this.physics.add.sprite(20, 100, "mario")
+  player = this.physics.add.sprite(20, 195, "mario")
     .setOrigin(0, 0)
     .setCollideWorldBounds(true) //tiene que colisionar con el mundo
   player.isDead = false
@@ -109,74 +109,87 @@ function create() {
   this.physics.world.setBounds(0, 0, 2000, config.height) //indexX, indexY, limiteX, limiteY
 
   //crear las teclas para poder visualizarlas en update
-  this.keys = this.input.keyboard.createCursorKeys();
+  this.keys = this.input.keyboard.createCursorKeys()
 
   //camara
   this.cameras.main.setBounds(0,0,2000, config.height)
   this.cameras.main.startFollow(player)
-
   
   //añadir colision con el suelo
-  this.physics.add.collider(player, floor);
+  this.physics.add.collider(player, floor)
 
   //mistery block
   misteryBlocks = this.physics.add.staticGroup({
-    allowGravity: false //desactivar la gravedad
+    allowGravity: false
   })
 
-  this.misteryBlock = misteryBlocks.create(240, 170, 'mistery')
-    .refreshBody()
+  this.misteryBlock = misteryBlocks.create(220, 170, 'misteryBlock')
     .setOrigin(0,0)
-    .setSize(16, 16); // Ajustar la hitbox si es necesario
+    .refreshBody()
 
   //160
   this.misteryBlock.anims.play('mistery')
-  this.physics.add.collider(player,misteryBlocks)
-  this.physics.add.overlap(player,misteryBlocks)
+  
+  this.physics.add.collider(player,misteryBlocks, function() {console.log('colisión detectada')})
+  //this.physics.add.overlap(player,misteryBlocks, function() {console.log('colisión overlap')})
+  
   
   //colindar con monedas
   money = this.physics.add.group({
     allowGravity: false //desactivar la gravedad
   })
-  let coin = money.create(300, 180, 'coin-rotates').refreshBody().setOrigin(0,0)
+  let coin = money.create(300, 180, 'coin')
+    .setOrigin(0,0)
+    .refreshBody()
   coin.anims.play('coin-rotates')
-
+  
   this.physics.add.overlap(player, money, collectMoney, null, this)
-
+  
   //enemigos
   enemies = this.physics.add.group()
   createEnemies(this, enemies)
-
+  this.physics.add.collider(enemies, floor)
+  
   // Colisiones con enemigos
   this.physics.add.collider(player, enemies)
-  this.physics.add.collider(player, enemies, dead, null, this)
   this.physics.add.overlap(player, enemies, hitEnemy, null, this);
-  this.physics.add.collider(enemies, floor);
+  // this.physics.add.collider(player, enemies, dead, null, this)
+  this.physics.add.collider(enemies, floor)
 
   //this.sound.play('basic-music');
+  // Herramientas de depuración
+  this.physics.world.createDebugGraphic()
+  this.misteryBlock.body.debugShowBody = true
+  this.misteryBlock.body.debugBodyColor = 0xff00ff
+  misteryBlocks.children.iterate((block) => {
+    block.body.debugShowBody = true;
+  });
+  player.body.debugShowBody = true;
 }
 
 
 /*----------------------------- UPDATE -----------------------------*/
 function update() {
+
   if (player.isDead) {
     score = 0
     return
   } 
   
   if (this.keys.left.isDown) {
-    player.x -= 2;
-    player.anims.play("mario-walk", true);
+    // player.x -= 2 --> con esto pasa a través de los objetos
+    player.setVelocityX(-100)
+    player.anims.play("mario-walk", true)
     player.flipX = true;
   } else if (this.keys.right.isDown) {
-    player.x += 2;
-    player.anims.play("mario-walk", true);
-    player.flipX = false;
+    player.setVelocityX(100)
+    player.anims.play("mario-walk", true)
+    player.flipX = false
   } else {
-    /*
-    this.mario.anims.stop()
-    this.mario.setFrame(0) */
-    player.anims.play("mario-idle", true);
+    // this.mario.anims.stop()
+    // this.mario.setFrame(0) 
+    player.setVelocityX(0)
+    player.anims.play("mario-idle", true)
   }
 
   if (this.keys.up.isDown && player.body.touching.down) {
@@ -185,33 +198,33 @@ function update() {
     player.anims.play("mario-jump", true)
     this.sound.add('jump', {volume : 0.2}).play()
   } else if (!player.body.touching.down) {
-    player.anims.play("mario-jump", true);
+    player.anims.play("mario-jump", true)
   }
-
-  if (player.y >= config.height){
+//  console.log('update: y -->'+player.y + 'config.height: '+config.height)
+  if (player.y >= config.height-16){
     console.log("ha muerto")
     dead.call(this, player)
   }
 
-  enemies.getChildren().forEach(enemy => {
-    const playerBounds = player.getBounds();
-    const enemyBounds = enemy.getBounds();
-  if (player.body.touching.down && player.body.velocity.y > 0) {
-    
-    
-    // Verifica si el jugador está tocando el enemigo por arriba
-    if (playerBounds.bottom >= enemyBounds.top &&
-        Phaser.Geom.Intersects.RectangleToRectangle(playerBounds, enemyBounds)) {
-        enemy.anims.play("goomba-dead", true);
-        this.tweens.killTweensOf(enemy);
-        player.setVelocityY(-100)
-        this.sound.add('kick').play()
-        setTimeout(() => {
-          enemy.disableBody(true, true)
-        }, 800)
-    }
-  }
-})
+  // enemies.getChildren().forEach(enemy => {
+  //   const playerBounds = player.getBounds()
+  //   const enemyBounds = enemy.getBounds()
+  //   if (player.body.touching.down && player.body.velocity.y > 0) {
+  //       console.log('ha tocado en update')
+  //     // Verifica si el jugador está tocando el enemigo por arriba
+  //     if (playerBounds.bottom >= enemyBounds.top &&
+  //         Phaser.Geom.Intersects.RectangleToRectangle(playerBounds, enemyBounds)) {
+  //         console.log('ha tocado por arriba update')
+  //           enemy.anims.play("goomba-dead", true)
+  //         this.tweens.killTweensOf(enemy)
+  //         player.setVelocityY(-100)
+  //         this.sound.add('kick').play()
+  //         setTimeout(() => {
+  //           enemy.disableBody(true, true)
+  //         }, 800)
+  //     }
+  //   }
+  // })
 }
 
 /* ------------------------- FUNCTIONS -------------------- */
@@ -219,30 +232,41 @@ function update() {
 function collectMoney (player, money) {
     money.disableBody(true, true);
     this.sound.add('coin-collect', {volume : 0.2}).play()
-
     score += 1;
-    scoreText.setText('x0' + score);
+    coinText.setText('x0' + score);
 }
 
-function hitBlock (player, misteryBlock) {
-  misteryBlock.add.image(300, 212, 'emptyBlock')
-  .setOrigin(0, 1)
-  this.sound.add('coin-collect', {volume : 0.2}).play()
-
-  score += 1;
-  scoreText.setText('x0' + score);
-}
 
 function hitEnemy(player, enemy){
-  console.log("hit enemy")
-  if(!player.isDead){
-    dead.call(this, player)
-  }
-  if (player.getBounds().bottom >= enemy.getBounds().top) {
+  console.log("toca al enemigo")
+  
+  if (player.body.velocity.y > 0 && player.getBounds().bottom <= enemy.getBounds().top + 5) {
     // El jugador ha tocado el enemigo por arriba
     console.log('Jugador ha tocado el enemigo por arriba');
-    
-    // Aquí puedes implementar la lógica para el daño al enemigo o la muerte del enemigo
+      //poner puntuación
+    scoreUp = this.add.text(enemy.x, enemy.y, '100', { fontSize: '10px', fill: '#ffff' })
+      .setOrigin(0.5, 1)
+
+    // Añadir una animación para mover el texto hacia arriba
+    this.tweens.add({
+      targets: scoreUp,
+      y: scoreUp.y - 30, // Mover 30 píxeles hacia arriba
+      alpha: 0, // Hacer que se desvanezca
+      duration: 1000, // Duración de la animación
+      onComplete: function () {
+        scoreUp.destroy(); // Destruir el texto al finalizar la animación
+      }
+    })
+
+    enemy.anims.play("goomba-dead", true)
+    this.tweens.killTweensOf(enemy)
+    player.setVelocityY(-100)
+    this.sound.add('kick').play()
+    setTimeout(() => {
+      enemy.disableBody(true, true)
+    }, 800)
+  } else {
+    if(!player.isDead) dead.call(this, player)
   }
 }
 
@@ -255,9 +279,18 @@ function dead(player){
   player.body.checkCollision.none = true;
   let deadSound = this.sound.add('gameover')
   deadSound.play()
-
+  
   setTimeout(() => {
     deadSound.stop()
-      this.scene.restart()
+    this.scene.restart()
   }, 3000)
+  
+}
+
+function hitBlock (player, misteryBlock) {
+  misteryBlock.add.image(300, 212, 'emptyBlock')
+  .setOrigin(0, 1)
+  this.sound.add('coin-collect', {volume : 0.2}).play()
+  score += 1
+  coinText.setText('x0' + score)
 }
