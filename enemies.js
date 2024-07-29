@@ -1,7 +1,7 @@
 export const createEnemies = (game, enemies) => {
   // Reproducir la animación del enemigo
   const enemyPositions = [
-    { x: 240, y: 210 },
+    { x: 400, y: 210 },
     { x: 350, y: 210 }
   ];
 
