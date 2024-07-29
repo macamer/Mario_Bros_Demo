@@ -93,8 +93,6 @@ function create() {
   floor = this.physics.add.staticGroup()
   createFloor(floor, heightFloor)
 
-
-
   /* this.add
     .tileSprite(0, config.height, config.width-130, 32, "floorbricks")
     .setOrigin(0, 1);*/ //es una textura, se puede expandir
@@ -103,15 +101,12 @@ function create() {
   //this.mario = this.add.sprite(50, 210, "mario").setOrigin(0, 1);
 
   player = this.physics.add.sprite(20, 100, "mario")
-    .setOrigin(0, 1)
+    .setOrigin(0, 0)
     .setCollideWorldBounds(true) //tiene que colisionar con el mundo
   player.isDead = false
 
   //limites del mundo
   this.physics.world.setBounds(0, 0, 2000, config.height) //indexX, indexY, limiteX, limiteY
-
-  //añadir colision con el suelo
-  this.physics.add.collider(player, floor);
 
   //crear las teclas para poder visualizarlas en update
   this.keys = this.input.keyboard.createCursorKeys();
@@ -120,21 +115,25 @@ function create() {
   this.cameras.main.setBounds(0,0,2000, config.height)
   this.cameras.main.startFollow(player)
 
+  
+  //añadir colision con el suelo
+  this.physics.add.collider(player, floor);
 
   //mistery block
   misteryBlocks = this.physics.add.staticGroup({
     allowGravity: false //desactivar la gravedad
   })
-  
+
   this.misteryBlock = misteryBlocks.create(240, 170, 'mistery')
     .refreshBody()
     .setOrigin(0,0)
+    .setSize(16, 16); // Ajustar la hitbox si es necesario
+
   //160
   this.misteryBlock.anims.play('mistery')
   this.physics.add.collider(player,misteryBlocks)
   this.physics.add.overlap(player,misteryBlocks)
   
-
   //colindar con monedas
   money = this.physics.add.group({
     allowGravity: false //desactivar la gravedad
