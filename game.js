@@ -35,6 +35,7 @@ let score = 0, points = 0, scoreUp
 let coinText, marioText, marioScore, timeText
 let lives, time = 400
 let heightFloor = config.height - 16
+let empty = false
 
 
 //inicializar
@@ -75,6 +76,7 @@ function preload() {
   this.load.audio('basic-music', 'assets/sound/music/overworld/theme.mp3')
   this.load.audio('coin-collect', 'assets/sound/effects/coin.mp3')
   this.load.audio('kick', 'assets/sound/effects/kick.mp3')
+  this.load.audio('empty', 'assets/sound/effects/block-bump.wav')
 }
 
 /* ---------------------------- CREATE ----------------------------- */
@@ -147,7 +149,7 @@ function create() {
 
   this.misteryBlock.anims.play('mistery')
   
-  this.physics.add.collider(player,misteryBlocks, function() {console.log('colisión detectada')})
+  this.physics.add.collider(player,misteryBlocks, hitBlock, null, this)
  
   //colindar con monedas
   money = this.physics.add.group({
@@ -193,7 +195,7 @@ function create() {
 
 /*----------------------------- UPDATE -----------------------------*/
 function update() {
-  
+
   if (player.isDead) {
     score = 0
     time = 400
@@ -217,9 +219,6 @@ function update() {
   }
 
   if (this.keys.up.isDown && player.body.touching.down) {
-    // if (player.getBounds().bottom >= enemy.getBounds().top && player.getBounds().right >= enemy.getBounds().left && player.getBounds().left <= enemy.getBounds().right){
-    //   hitEnemy(player, enemy)
-    // }
     //this.mario.y -= 5;
     player.setVelocityY(-150)
     player.anims.play("mario-jump", true)
@@ -332,19 +331,28 @@ function dead(player){
 }
 
 function hitBlock (player, misteryBlock) {
-  misteryBlock.add.image(300, 212, 'emptyBlock')
-  .setOrigin(0, 1)
-  this.sound.add('coin-collect', {volume : 0.2}).play()
-  score += 1
-  coinText.setText('x0' + score)
+
+  if (player.getBounds().top >= misteryBlock.getBounds().bottom) {
+    console.log(empty)
+    if(!empty){
+      this.sound.add('coin-collect', {volume : 0.2}).play()
+      score += 1
+      coinText.setText('x0' + score)
+      empty = true
+    } else {
+      this.sound.add('empty').play()
+    }
+
+  }
+
 }
 
 function updateTimer() {
   if (time > 0) {
-    time--;
-    timeText.setText(time);
+    time--
+    timeText.setText(time)
   } else {
     // Si el tiempo llega a 0, manejar la lógica de fin del juego
-    if (!player.isDead) dead.call(this, player);
+    if (!player.isDead) dead.call(this, player)
   }
 }
