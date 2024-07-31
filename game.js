@@ -204,6 +204,8 @@ function update() {
 
   if (player.isDead) {
     score = 0
+    points = 0
+    empty = false
     time = 400
     return
   } 
