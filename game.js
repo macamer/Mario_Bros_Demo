@@ -234,7 +234,6 @@ function update() {
   }
 
   if (player.y >= config.height-16){
-    console.log("ha muerto")
     dead.call(this, player)
   }
 
@@ -273,15 +272,9 @@ function collectMoney (player, money) {
 
 
 function hitEnemy(player, enemy){
-  console.log("toca al enemigo")
-  // Verifica si el jugador está cayendo
-  console.log('velocidad y:'+ player.body.velocity.y)
   if (player.body.velocity.y != 0) {
     // Comprueba si el jugador está tocando el enemigo desde arriba
     if (player.getBounds().bottom <= enemy.getBounds().top && player.getBounds().right >= enemy.getBounds().left && player.getBounds().left <= enemy.getBounds().right) {
-      // El jugador ha tocado al enemigo por arriba
-      console.log('Jugador ha tocado el enemigo por arriba')
-
       // Mostrar puntuación
       scoreUp = this.add.text(enemy.x, enemy.y, '100', { fontSize: '10px', fill: '#ffff' })
         .setOrigin(0.5, 1)
@@ -320,9 +313,9 @@ function hitEnemy(player, enemy){
 }
 
 function dead(player){
-  console.log('dead')
   player.isDead = true
   player.anims.play('mario-dead', true)
+  player.setVelocityX(0)
   player.setVelocityY(-100)
   player.setCollideWorldBounds(false)
   player.body.checkCollision.none = true
@@ -359,8 +352,15 @@ function updateTimer() {
   if (time > 0) {
     time--
     timeText.setText(time)
-  } else if (time = 50 ) {
-    this.sound.add('time-warning').play()
+
+    if (time == 50) {
+      music.stop()
+      this.sound.add('time-warning').play()
+    }
+    if (time == 47){
+      music.play()
+      music.setRate(1.5)
+    }
   } else {
     // Si el tiempo llega a 0, manejar la lógica de fin del juego
     if (!player.isDead) dead.call(this, player)
