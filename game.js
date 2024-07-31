@@ -119,7 +119,7 @@ function create() {
   //this.mario = this.add.sprite(50, 210, "mario").setOrigin(0, 1);
 
   player = this.physics.add.sprite(20, 195, "mario")
-    .setOrigin(0, 0)
+    // .setOrigin(0, 0)
     .setCollideWorldBounds(true) //tiene que colisionar con el mundo
   player.isDead = false
 
@@ -148,9 +148,7 @@ function create() {
   this.misteryBlock.anims.play('mistery')
   
   this.physics.add.collider(player,misteryBlocks, function() {console.log('colisión detectada')})
-  //this.physics.add.overlap(player,misteryBlocks, function() {console.log('colisión overlap')})
-  
-  
+ 
   //colindar con monedas
   money = this.physics.add.group({
     allowGravity: false //desactivar la gravedad
@@ -168,7 +166,7 @@ function create() {
   this.physics.add.collider(enemies, floor)
   
   // Colisiones con enemigos
-  this.physics.add.collider(player, enemies)
+  //this.physics.add.collider(player, enemies)
   this.physics.add.overlap(player, enemies, hitEnemy, null, this);
   // this.physics.add.collider(player, enemies, dead, null, this)
   this.physics.add.collider(enemies, floor)
@@ -195,7 +193,7 @@ function create() {
 
 /*----------------------------- UPDATE -----------------------------*/
 function update() {
- 
+  
   if (player.isDead) {
     score = 0
     time = 400
@@ -219,6 +217,9 @@ function update() {
   }
 
   if (this.keys.up.isDown && player.body.touching.down) {
+    // if (player.getBounds().bottom >= enemy.getBounds().top && player.getBounds().right >= enemy.getBounds().left && player.getBounds().left <= enemy.getBounds().right){
+    //   hitEnemy(player, enemy)
+    // }
     //this.mario.y -= 5;
     player.setVelocityY(-150)
     player.anims.play("mario-jump", true)
@@ -272,7 +273,7 @@ function hitEnemy(player, enemy){
   console.log('velocidad y:'+ player.body.velocity.y)
   if (player.body.velocity.y != 0) {
     // Comprueba si el jugador está tocando el enemigo desde arriba
-    if (player.getBounds().bottom >= enemy.getBounds().top && player.getBounds().right >= enemy.getBounds().left && player.getBounds().left <= enemy.getBounds().right) {
+    if (player.getBounds().bottom <= enemy.getBounds().top && player.getBounds().right >= enemy.getBounds().left && player.getBounds().left <= enemy.getBounds().right) {
       // El jugador ha tocado al enemigo por arriba
       console.log('Jugador ha tocado el enemigo por arriba')
 
