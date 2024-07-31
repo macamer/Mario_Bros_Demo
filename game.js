@@ -31,9 +31,9 @@ let money
 let floor
 let misteryBlocks
 let enemies
-let score = 0, scoreUp
-let coinText, marioText, wordText, timeText
-let lives
+let score = 0, points = 0, scoreUp
+let coinText, marioText, marioScore, timeText
+let lives, time = 400
 let heightFloor = config.height - 16
 
 
@@ -86,6 +86,24 @@ function create() {
   coinText = this.add.text(90, 10, 'x00', { fontSize: '10px', fill: '#ffff' })
     .setOrigin(0,0)
     .setScrollFactor(0) //Fijar el texto en la camara
+  marioText = this.add.text(20, 10, 'MARIO', { fontSize: '10px', fill: '#ffff' })
+    .setOrigin(0,0)
+    .setScrollFactor(0)
+  marioScore = this.add.text(20, 20, '000000', { fontSize: '10px', fill: '#ffff' })
+    .setOrigin(0,0)
+    .setScrollFactor(0)
+  this.add.text(150, 10, 'WORLD', { fontSize: '10px', fill: '#ffff' })
+    .setOrigin(0,0)
+    .setScrollFactor(0)
+  this.add.text(150, 20, '1-1', { fontSize: '10px', fill: '#ffff' })
+    .setOrigin(0,0)
+    .setScrollFactor(0)
+  this.add.text(210, 10, 'TIME', { fontSize: '10px', fill: '#ffff' })
+    .setOrigin(0,0)
+    .setScrollFactor(0)
+  timeText = this.add.text(210, 20, time, { fontSize: '10px', fill: '#ffff' })
+    .setOrigin(0,0)
+    .setScrollFactor(0)
   
   this.add.sprite(75, 10, "coin").setOrigin(0, 0).setScrollFactor(0).setScale(0.7)
   
@@ -123,11 +141,10 @@ function create() {
     allowGravity: false
   })
 
-  this.misteryBlock = misteryBlocks.create(220, 170, 'misteryBlock')
+  this.misteryBlock = misteryBlocks.create(220, 160, 'misteryBlock')
     .setOrigin(0,0)
     .refreshBody()
 
-  //160
   this.misteryBlock.anims.play('mistery')
   
   this.physics.add.collider(player,misteryBlocks, function() {console.log('colisión detectada')})
@@ -156,6 +173,14 @@ function create() {
   // this.physics.add.collider(player, enemies, dead, null, this)
   this.physics.add.collider(enemies, floor)
 
+  // Iniciar el temporizador
+  this.time.addEvent({
+    delay: 1000,
+    callback: updateTimer,
+    callbackScope: this,
+    loop: true
+  });
+
   //this.sound.play('basic-music');
   // Herramientas de depuración
   this.physics.world.createDebugGraphic()
@@ -170,9 +195,10 @@ function create() {
 
 /*----------------------------- UPDATE -----------------------------*/
 function update() {
-
+ 
   if (player.isDead) {
     score = 0
+    time = 400
     return
   } 
   
@@ -194,13 +220,13 @@ function update() {
 
   if (this.keys.up.isDown && player.body.touching.down) {
     //this.mario.y -= 5;
-    player.setVelocityY(-100)
+    player.setVelocityY(-150)
     player.anims.play("mario-jump", true)
     this.sound.add('jump', {volume : 0.2}).play()
   } else if (!player.body.touching.down) {
     player.anims.play("mario-jump", true)
   }
-//  console.log('update: y -->'+player.y + 'config.height: '+config.height)
+
   if (player.y >= config.height-16){
     console.log("ha muerto")
     dead.call(this, player)
@@ -230,41 +256,58 @@ function update() {
 /* ------------------------- FUNCTIONS -------------------- */
 
 function collectMoney (player, money) {
-    money.disableBody(true, true);
+    money.disableBody(true, true)
     this.sound.add('coin-collect', {volume : 0.2}).play()
-    score += 1;
-    coinText.setText('x0' + score);
+    score += 1
+    coinText.setText('x0' + score)
+    //actualizar puntuación
+    points += 1
+    marioScore.setText('000' + points)
 }
 
 
 function hitEnemy(player, enemy){
   console.log("toca al enemigo")
-  
-  if (player.body.velocity.y > 0 && player.getBounds().bottom <= enemy.getBounds().top + 5) {
-    // El jugador ha tocado el enemigo por arriba
-    console.log('Jugador ha tocado el enemigo por arriba');
-      //poner puntuación
-    scoreUp = this.add.text(enemy.x, enemy.y, '100', { fontSize: '10px', fill: '#ffff' })
-      .setOrigin(0.5, 1)
+  // Verifica si el jugador está cayendo
+  console.log('velocidad y:'+ player.body.velocity.y)
+  if (player.body.velocity.y != 0) {
+    // Comprueba si el jugador está tocando el enemigo desde arriba
+    if (player.getBounds().bottom >= enemy.getBounds().top && player.getBounds().right >= enemy.getBounds().left && player.getBounds().left <= enemy.getBounds().right) {
+      // El jugador ha tocado al enemigo por arriba
+      console.log('Jugador ha tocado el enemigo por arriba')
 
-    // Añadir una animación para mover el texto hacia arriba
-    this.tweens.add({
-      targets: scoreUp,
-      y: scoreUp.y - 30, // Mover 30 píxeles hacia arriba
-      alpha: 0, // Hacer que se desvanezca
-      duration: 1000, // Duración de la animación
-      onComplete: function () {
-        scoreUp.destroy(); // Destruir el texto al finalizar la animación
-      }
-    })
+      // Mostrar puntuación
+      scoreUp = this.add.text(enemy.x, enemy.y, '100', { fontSize: '10px', fill: '#ffff' })
+        .setOrigin(0.5, 1)
 
-    enemy.anims.play("goomba-dead", true)
-    this.tweens.killTweensOf(enemy)
-    player.setVelocityY(-100)
-    this.sound.add('kick').play()
-    setTimeout(() => {
-      enemy.disableBody(true, true)
-    }, 800)
+      // Añadir una animación para mover el texto hacia arriba
+      this.tweens.add({
+        targets: scoreUp,
+        y: scoreUp.y - 30, // Mover 30 píxeles hacia arriba
+        alpha: 0, // Hacer que se desvanezca
+        duration: 1000, // Duración de la animación
+        onComplete: function () {
+          scoreUp.destroy() // Destruir el texto al finalizar la animación
+        }
+      })
+
+      enemy.anims.play("goomba-dead", true)
+      this.tweens.killTweensOf(enemy)
+      player.setVelocityY(-100) // Rebotar al jugador
+      this.sound.add('kick').play()
+
+      //actualizar puntuación
+      points += 100
+      marioScore.setText('000' + points)
+      
+      // Desactivar el enemigo después de un tiempo
+      setTimeout(() => {
+        enemy.disableBody(true, true)
+      }, 800)
+    } else {
+      // Si no se cumple la condición de golpe, el jugador muere
+      if (!player.isDead) dead.call(this, player);
+    }
   } else {
     if(!player.isDead) dead.call(this, player)
   }
@@ -293,4 +336,14 @@ function hitBlock (player, misteryBlock) {
   this.sound.add('coin-collect', {volume : 0.2}).play()
   score += 1
   coinText.setText('x0' + score)
+}
+
+function updateTimer() {
+  if (time > 0) {
+    time--;
+    timeText.setText(time);
+  } else {
+    // Si el tiempo llega a 0, manejar la lógica de fin del juego
+    if (!player.isDead) dead.call(this, player);
+  }
 }
