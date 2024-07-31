@@ -36,6 +36,7 @@ let coinText, marioText, marioScore, timeText
 let lives, time = 400
 let heightFloor = config.height - 16
 let empty = false
+let music
 
 
 //inicializar
@@ -77,6 +78,8 @@ function preload() {
   this.load.audio('coin-collect', 'assets/sound/effects/coin.mp3')
   this.load.audio('kick', 'assets/sound/effects/kick.mp3')
   this.load.audio('empty', 'assets/sound/effects/block-bump.wav')
+  this.load.audio('time-warning', 'assets/sound/effects/time-warning.mp3')
+
 }
 
 /* ---------------------------- CREATE ----------------------------- */
@@ -181,7 +184,10 @@ function create() {
     loop: true
   });
 
-  //this.sound.play('basic-music');
+  //musica
+  music = this.sound.add('basic-music', {loop : true})
+  music.play()
+
   // Herramientas de depuración
   this.physics.world.createDebugGraphic()
   this.misteryBlock.body.debugShowBody = true
@@ -319,7 +325,9 @@ function dead(player){
   player.anims.play('mario-dead', true)
   player.setVelocityY(-100)
   player.setCollideWorldBounds(false)
-  player.body.checkCollision.none = true;
+  player.body.checkCollision.none = true
+
+  if (music) music.stop()
   let deadSound = this.sound.add('gameover')
   deadSound.play()
   
@@ -351,6 +359,8 @@ function updateTimer() {
   if (time > 0) {
     time--
     timeText.setText(time)
+  } else if (time = 50 ) {
+    this.sound.add('time-warning').play()
   } else {
     // Si el tiempo llega a 0, manejar la lógica de fin del juego
     if (!player.isDead) dead.call(this, player)
